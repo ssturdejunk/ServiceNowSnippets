@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="true" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	<tbody data-sn-macro-sys-id="${jvar_macro_sys_id}">
+    <tr>
+        <td class="label_left" width="100%">
+            ${gs.getMessage('Summary of Stories within Release being approved')}:
+            <g:label_spacing />
+        </td>
+    </tr>
+		<g:evaluate var="jvar_ourid"
+        expression="        
+        jvar_ourid = ${ref}.sys_id;
+		jvar_ourid;
+        " />
+					
+    <g:evaluate var="jvar_total"
+        expression="        
+        var rm_release_scrum = ${ref}.sysapproval;
+
+        var rm_story_labels = new GlideRecord('rm_story');
+        rm_story_labels.initialize();
+    
+        var rm_story = new GlideRecord('rm_story');
+        rm_story.addQuery('release', rm_release_scrum.sys_id);
+		rm_story.orderBy('number');
+        rm_story.query();
+
+        var jvar_total = rm_release_scrum.points;
+        jvar_total;
+        " />
+    <tr>
+        <td width="100%">
+            <table class="table" width="100%">
+                <tr>
+                    <td class="label_left" width="150px">
+                        <g:label_spacing />
+                        ${rm_release_scrum.opened_by.sys_meta.label}:
+                    </td>
+                    <td>
+                        ${rm_release_scrum.opened_by.getDisplayValue()}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label_left" width="150px">
+                        <g:label_spacing />
+                        ${gs.getMessage('Total Story Points')}:
+                    </td>
+                    <td>${jvar_total}</td> 
+					<!-- <g:evaluate var="jvar_site_and_page" jelly="true">
+					   current_page.getURLSuffix();
+				</g:evaluate>
+					Current URL is this:<br/>
+					${RP.getParameterValue('jvar_base_uri')}sysapproval_approver.do?sys_id=${jvar_ourid} -->
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <j:set var="jvar_line_num" value="0" />
+    <tr>
+        <td width="100%">
+            <script>
+                function lineItemVeto(rm_story, state, approval) {
+					var form = addForm();
+                    form.action = 'release_story.do';
+                    form.name = 'release_story.do';
+                    form.id = 'release_story.do';
+                    form.method = "POST";
+                    var nameOfStack = $('sysparm_nameofstack');
+                    if (nameOfStack != null) {
+                        nameOfStack = nameOfStack.value;
+                        if (nameOfStack != '')
+                            addInput(form, "HIDDEN", "sysparm_nameofstack", nameOfStack);
+                    }
+					addInput(form, "HIDDEN", "sysparm_approval", approval);
+                    addInput(form, "HIDDEN", "sysparm_action", "veto");
+                    addInput(form, "HIDDEN", "sysparm_id", rm_story);
+                    addInput(form, "HIDDEN", "sysparm_state", state);
+                    form.submit();
+                }
+            </script>
+            <table class="table" width="100%">
+                <thead>
+                    <tr>
+                        <th>
+							${gs.current}
+                            ${gs.getMessage('Status')}
+                        </th>
+                        <th>
+                            ${rm_story_labels.number.sys_meta.label}
+                        </th>
+                        <th>
+                            ${rm_story_labels.short_description.sys_meta.label}
+                        </th>
+						<th>
+                            ${rm_story_labels.description.sys_meta.label}
+                        </th>
+						<th>
+                            ${rm_story_labels.acceptance_criteria.sys_meta.label}
+                        </th>
+                        <th>
+                            ${rm_story_labels.story_points.sys_meta.label}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <j:while test="${rm_story.next()}">
+                        <j:set var="jvar_item_story_points" value="${rm_story.story_points}" />
+                        <j:set var="jvar_overall_total" value="${jvar_overall_total + jvar_item_story_points}" />
+                        <j:set var="jvar_line_color" value="odd" />
+                        <j:set var="jvar_line_num" value="${jvar_line_num + 1}" />
+                        <j:if test="${jvar_line_num % 2 == 0}">
+                            <j:set var="jvar_line_color" value="even" />
+                        </j:if>
+                        <g:evaluate var="ni"
+                            expression="
+                            var smart_description = rm_story.short_description;
+                            if (smart_description == null || smart_description == '' || smart_description == 'undefined')
+                               smart_description = rm_story.description;    
+							if (smart_description == null || smart_description == '' || smart_description == 'undefined')
+                               smart_description = rm_story.acceptance_criteria;
+                            " />                        
+
+						<tr class="${jvar_line_color}">
+                            <j:choose>
+                                <j:when test="${rm_story.approval == 'rejected'}">
+                                    <td>
+                                        <img class="nopadding" src="images/workflow_rejected.gifx" alt="${gs.getMessage('Rejected')}" />
+                                        <div style="display: inline-block; padding-left: 10px; padding-right: 10px;">
+                                            <a onclick="return false" class="web line_item_veto_control" style="text-decoration: none;">$[AMP]nbsp;</a>
+                                        </div>
+                                    </td>
+                                </j:when>
+                                <j:when test="${rm_story.approval == 'requested'}">
+                                    <td>
+                                        <img class="nopadding" src="images/workflow_requested.gifx" alt="${gs.getMessage('Requested')}" />
+                                        <div style="display: inline-block; padding-left: 10px; padding-right: 10px;">
+                                            <a onclick="return false" class="web line_item_veto_control" style="text-decoration: none;">$[AMP]nbsp;</a>
+                                        </div>
+                                    </td>
+                                </j:when>
+                                <j:when test="${rm_story.approval == 'approved'}">
+                                    <td>
+                                        <img class="nopadding" src="images/workflow_approved.gifx" alt="${gs.getMessage('Approved')}" />
+                                        <div style="display: inline-block; padding-left: 10px; padding-right: 10px;">
+                                            <a onclick="return false" class="web line_item_veto_control" style="text-decoration: none;">$[AMP]nbsp;</a>
+                                        </div>
+                                    </td>
+                                </j:when>
+                                <j:when test="${rm_story.approval == 'not requested'}">
+                                    <td>
+                                        <img class="nopadding" src="images/workflow_pending.gifx" alt="${gs.getMessage('Pending')}"/>
+                                        <div style="display: inline-block; padding-left: 10px; padding-right: 10px;">
+                                            <a onclick="lineItemVeto('${rm_story.sys_id}', 'reject','${jvar_ourid}')" class="web line_item_veto_control">${gs.getMessage('Deny')}</a>
+                                        </div>
+                                        <div style="display: inline-block; padding-right: 10px;">
+                                            <a onclick="lineItemVeto('${rm_story.sys_id}', 'accept','${jvar_ourid}')" class="web line_item_veto_control">${gs.getMessage('Accept')}</a>
+                                        </div>
+                                    </td>
+                                </j:when>
+                            </j:choose>
+                            <td valign="top">
+                                <g2:evaluate var="jvar_pop_target" expression="$[ref].getRecordClassName()" />
+                                <a class="linked" target="gsft_main" href="rm_story.do?sys_id=${rm_story.sys_id}"
+                                    onmouseover="popListDiv(event, 'rm_story', '${rm_story.sys_id}','${JS:sysparm_view}')" onmouseout="lockPopup(event)">
+                                    <img src="images/icons/hover_icon.gifx" class="clsshort" alt="${gs.getMessage('uppercase_view')}" />
+                                </a>
+                                <a class="linked" target="gsft_main" href="rm_story.do?sys_id=${rm_story.sys_id}">
+                                    ${rm_story.number}
+                                </a>
+                            </td>
+                            <td valign="top"> ${smart_description}</td>
+							<td valign="top"> ${rm_story.description}</td>
+							<td valign="top"> ${rm_story.acceptance_criteria}</td>
+                            <td valign="top"> ${rm_story.story_points}</td>
+                        </tr>
+                    </j:while>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+	</tbody>
+</j:jelly>
