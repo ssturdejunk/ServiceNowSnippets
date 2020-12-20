@@ -1,0 +1,59 @@
+<!-- HTML section -->
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	<j:set var="jvar_msg_intro" value="${sysparm_intro}"/>
+	<j:set var="jvar_msg_subject" value="${sysparm_subject}"/>
+	<j:set var="jvar_msg_body" value="${sysparm_body}"/>
+	<j:set var="jvar_msg_body2" value="${sysparm_body2}"/>
+	<j:set var="jvar_msg_body3" value="${sysparm_body3}"/>
+	<j:set var="jvar_msg_recipients" value="${sysparm_recipients}"/>
+	<j:set var="jvar_msg_ciList" value="${sysparm_ciList}"/>
+<!-- 	<g:ui_form> -->
+<!-- 		<g:evaluate var="jvar_msg_html"> -->
+			<div class="modal-body">
+				<div>
+					${jvar_msg_intro}<br></br><br></br>
+					<strong>Subject: </strong><br></br>
+					${jvar_msg_subject}<br></br><br></br>
+					<strong>Body: </strong><br></br>
+					${jvar_msg_body}<br></br>
+					${jvar_msg_body2}<br></br>
+					${jvar_msg_body3}<br></br><br></br>
+					<strong>Recipients: </strong><br></br>${jvar_msg_recipients}<br></br><br></br>
+					<strong>CI List: </strong><br></br>${jvar_msg_ciList}
+				</div>
+			</div>
+<!-- 		</g:evaluate> -->
+	
+	<footer class="modal-footer flex">
+		<g:dialog_buttons_ok_cancel ok="return onOK();" cancel="return onCancel();" ok_type="button" cancel_type="button"/>
+	</footer>
+<!-- 	</g:ui_form> -->
+</j:jelly>
+
+
+<!-- Client Script -->
+<script>
+function onOK() {
+	gsftSubmit(null, g_form.getFormElement(), 'message_confirmation');  // if ok is clicked, call the unique UI action name to invoke the remaining server-side actions
+}
+
+function onCancel() {
+	closeGlideModal(); // if cancel, close modal box
+}
+
+function closeGlideModal() { // if user clicks the 'x' on the modal
+	try {
+		GlideModal.get().destroy(); // cancel action and remove modal from screen
+	}
+	catch(err){
+      var x = document.getElementById('global.message_confirm_modal');
+      if (x) {
+			x.click();
+		} 
+      else {
+			//console.warn("No 'X' close button found!");
+		}
+	}
+}
+</script>
